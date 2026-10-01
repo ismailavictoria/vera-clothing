@@ -6,7 +6,7 @@ import { useCart } from '../features/cart/CartContext';
 import { useAuth } from '../features/auth/AuthContext';
 import { Input, Button } from '../components/ui';
 import { OrderSummary } from '../components/OrderSummary';
-import { createOrder, type OrderData, type OrderItemData } from '../features/orders/orderRepository';
+import { createOrder, type CreateOrderRequest, type OrderItemInput } from '../features/orders/orderRepository';
 
 type FormFields = { fullName: string; email: string; phone: string; address: string; city: string; state: string; country: string };
 type FieldErrors = Partial<Record<keyof FormFields, string>>;
@@ -49,22 +49,11 @@ export function CheckoutPage() {
       const total = cart.subtotal;
       if (total <= 0) throw new Error('Cart total must be greater than zero.');
 
-      const orderData: OrderData = {
-        user_id: user.id,
-        customer_name: form.fullName.trim(),
-        customer_email: form.email.trim(),
-        customer_phone: form.phone.trim(),
-        shipping_address: shippingAddress,
-        total,
-        status: 'pending',
-      };
-
-      const orderItems: OrderItemData[] = lines.map((line) => {
+      const orderItems: OrderItemInput[] = lines.map((line) => {
         const product = products.find((p) => p.id === line.productId);
         const variant = product?.variants.find((v) => v.id === line.variantId);
         const unitPrice = variant?.priceOverride ?? product?.price ?? 0;
         return {
-          order_id: '', // will be set in createOrder
           product_id: line.productId,
           product_name: product?.name ?? 'Unknown product',
           quantity: line.quantity,
@@ -74,7 +63,16 @@ export function CheckoutPage() {
         };
       });
 
-      const createdOrder = await createOrder(orderData, orderItems);
+      const orderRequest: CreateOrderRequest = {
+        customer_name: form.fullName.trim(),
+        customer_email: form.email.trim(),
+        customer_phone: form.phone.trim(),
+        shipping_address: shippingAddress,
+        total,
+        items: orderItems,
+      };
+
+      const createdOrder = await createOrder(orderRequest);
       setOrderId(createdOrder.id);
       cart.clear();
       setComplete(true);
