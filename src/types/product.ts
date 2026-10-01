@@ -1,5 +1,17 @@
 export type ProductCategory = 'Dresses' | 'Tops' | 'Trousers' | 'Skirts' | 'Jumpsuits' | 'Accessories';
 
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  sku: string;
+  size: string;
+  color: string;
+  hex: string;
+  priceOverride?: number;
+  stockQuantity: number;
+  isActive: boolean;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -14,11 +26,14 @@ export interface Product {
   featured?: boolean;
   badge?: string;
   material?: string;
+  /** Active variants from product_variants table */
+  variants: ProductVariant[];
 }
 
 export interface CartLine {
   lineId: string;
   productId: string;
+  variantId: string;
   size: string;
   color: string;
   quantity: number;
